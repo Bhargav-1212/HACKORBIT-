@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Medication Reminder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"/>
+  <link rel="shortcut icon" href="./Images/Minimalist_Healthcare_Digital_Logo-removebg-preview.png" type="image/x-icon">
+  <style>
+    :root {
+      --green: #007DFE;
+      --black: #222;
+      --light-color: #777;
+      --box-shadow: .5rem .5rem 0 rgba(22, 160, 133, .2);
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f5f5;
+    }
+    .input-field, .card {
+      border-radius: 10px;
+      box-shadow: var(--box-shadow);
+    }
+    .btn-primary {
+      background-color: var(--green);
+      border-color: var(--green);
+    }
+    .btn-primary:hover {
+      background-color: #0069d9;
+      border-color: #0069d9;
+    }
+    .form-section {
+      width: 100%;
+      max-width: 600px;
+    }
+    .med-list-section {
+      flex: 1;
+      margin-left: 30px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .med-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--box-shadow);
+    }
+    h1, h2 {
+      color: var(--black);
+    }
+    @media (max-width: 991px) {
+      .layout {
+        flex-direction: column;
+      }
+      .med-list-section {
+        margin-left: 0;
+        margin-top: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5">
+    <div class="layout d-flex flex-wrap">
+      <!-- Form -->
+      <div class="form-section">
+        <h1 class="mb-4"><b>Medication Reminder</b></h1>
+        <form id="medForm">
+          <div class="mb-3">
+            <label class="form-label">Medication Name</label>
+            <input type="text" id="medicationName" class="form-control input-field" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dosage</label>
+            <input type="text" id="dosage" class="form-control input-field" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">How often?</label>
+            <select id="howOften" class="form-select input-field" required>
+              <option value="">Select frequency</option>
+              <option value="onceDaily">Once daily</option>
+              <option value="twiceDaily">Twice daily</option>
+              <option value="thriceDaily">Thrice daily</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Medication Time(s)</label>
+            <div id="timeInputs">
+              <input type="time" class="form-control input-field mb-2 medTime" required />
+            </div>
+            <button type="button" id="addTimeBtn" class="btn btn-primary btn-sm mt-2">+ Add Time</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Start Date</label>
+            <input type="date" id="startDate" class="form-control input-field" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">End Date</label>
+            <input type="date" id="endDate" class="form-control input-field" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Prescribed by</label>
+            <input type="text" id="prescribedBy" class="form-control input-field" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Special Instructions</label>
+            <textarea id="specialInstructions" class="form-control input-field" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Submit</button>
+        </form>
+      </div>
+
+      <!-- Medications -->
+      <div class="med-list-section">
+        <h2 class="mb-4"><b>My Medications</b></h2>
+        <div id="medicationsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const medicationsList = document.getElementById("medicationsList");
+    const form = document.getElementById("medForm");
+    const timeInputs = document.getElementById("timeInputs");
+    const addTimeBtn = document.getElementById("addTimeBtn");
+
+    let medications = JSON.parse(localStorage.getItem("medications")) || [];
+
+    const renderMedications = () => {
+      medicationsList.innerHTML = "";
+      medications.forEach(med => {
+        const card = `
+          <div class="med-card">
+            <h5>${med.name} (${med.dosage})</h5>
+            <p><i class="bi bi-clock"></i> ${med.times.join(", ")}</p>
+            <p><i class="bi bi-calendar"></i> ${med.startDate} to ${med.endDate}</p>
+            <p><strong>By:</strong> ${med.prescribedBy}</p>
+            <p><strong>Note:</strong> ${med.specialInstructions || "—"}</p>
+          </div>`;
+        medicationsList.insertAdjacentHTML("beforeend", card);
+      });
+    };
+
+    renderMedications();
+
+    addTimeBtn.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "time";
+      input.className = "form-control input-field mb-2 medTime";
+      timeInputs.appendChild(input);
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const medicationName = document.getElementById("medicationName").value;
+      const dosage = document.getElementById("dosage").value;
+      const howOften = document.getElementById("howOften").value;
+      const times = [...document.querySelectorAll(".medTime")].map(i => i.value);
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const prescribedBy = document.getElementById("prescribedBy").value;
+      const specialInstructions = document.getElementById("specialInstructions").value;
+
+      const med = { name: medicationName, dosage, howOften, times, startDate, endDate, prescribedBy, specialInstructions };
+      medications.push(med);
+      localStorage.setItem("medications", JSON.stringify(medications));
+      renderMedications();
+
+      form.reset();
+      timeInputs.innerHTML = '<input type="time" class="form-control input-field mb-2 medTime" required />';
+    });
+
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    setInterval(() => {
+      const now = new Date();
+      const current = now.toTimeString().slice(0, 5);
+      medications.forEach(med => {
+        if (med.times.includes(current)) {
+          new Notification("Medication Reminder", {
+            body: `Time to take ${med.name} (${med.dosage})`,
+            icon: "https://cdn-icons-png.flaticon.com/512/3062/3062634.png"
+          });
+        }
+      });
+    }, 60000);
+  </script>
+</body>
+</html>
